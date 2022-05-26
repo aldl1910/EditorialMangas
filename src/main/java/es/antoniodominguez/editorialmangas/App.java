@@ -33,6 +33,7 @@ public class App extends Application {
             EntityManagerFactory emf = Persistence.createEntityManagerFactory("EditorialMangasPU");
             em = emf.createEntityManager();
         } catch(PersistenceException ex){
+            // DETECTA SI LA BASE DE DATOS ESTÁ CONECTADA A LA HORA DE INICIAR EL PROGRAMA
             Logger.getLogger(App.class.getName()).log(Level.WARNING, ex.getMessage(),ex);
             Alert  alert =  new Alert(Alert.AlertType.WARNING);
             alert.setTitle("Atención");
@@ -56,11 +57,13 @@ public class App extends Application {
             
         }
     }
-
+    
+    // CARGA EL FXML
     static void setRoot(String fxml) throws IOException {
         scene.setRoot(loadFXML(fxml));
     }
 
+    // CREA UN OBJETO DE FXMLLOADER
     private static Parent loadFXML(String fxml) throws IOException {
         fxmlLoader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
         return fxmlLoader.load();

@@ -104,20 +104,22 @@ public class SecondaryController{
     }
     
       
-    
+    // MÉTODO QUE USAMOS PARA PASAR LA INFORMACIÓN DE LA PRIMERA A LA SEGUNDA PANTALLA
     public void setManga(Manga manga) {
         App.em.getTransaction().begin();
         this.manga = manga;
         mostrarDatos();
     }
-//    
+    
     private void  mostrarDatos(){
+        // RELLENAMOS LOS CAMPOS STRING CON LOS DATOS DEL MANGA
         textFieldNombreSecondary.setText(manga.getNombre());
         textFieldAutorSecondary.setText(manga.getAutor());
         textFieldISBMSecondary.setText(manga.getIsbn());
         textFieldEmailEditorialSecondary.setText(manga.getEmailEditorial());
         textFieldIdiomaSecondary.setText(manga.getIdioma());
         
+        // CONVERTIMOS LOS DATOS NUMÉRICOS A STRING
         if (manga.getVolumen() != null){
             textFieldVolumenSecondary.setText(String.valueOf(manga.getVolumen()));
         }
@@ -130,9 +132,13 @@ public class SecondaryController{
         if (manga.getPrecio() != null){
             textFieldPrecioSecondary.setText(String.valueOf(manga.getPrecio()));
         }
+        
+        // COMPROBAMOS SI EL CHECKBOX ESTÁ MARCADO O NO, DATO BOOLEANO
         if (manga.getRestriccionEdad() != null){
             CheckBox18.setSelected(manga.getRestriccionEdad());
         }
+        
+        // RADIOBUTTON CON DIFERENTES VALORES, SEGÚN EL ESTADO DEL MANGA
         if (manga.getEstado() != null){
             switch (manga.getEstado()){
                 case PUBLICANDO:
@@ -149,6 +155,8 @@ public class SecondaryController{
                     break;
             }
         }
+        
+        // CALENDARIO PARA SELECCIONAR LA FECHA
         if (manga.getFechaPublicaion() != null) {
             Date date = manga.getFechaPublicaion();
             Instant instant = date.toInstant();
@@ -156,6 +164,8 @@ public class SecondaryController{
             LocalDate localDate = zdt.toLocalDate();
             DatePickerPublicacion.setValue(localDate);
         }
+        
+        // ELEMENTOS DE LA SEGUNDA TABLA MOSTRADO EN UNA LISTA DESPLEGABLE
         Query queryEditorialFindAll = App.em.createNamedQuery("Editorial.findAll");
         List<Editorial> listEditorial = queryEditorialFindAll.getResultList();
         
@@ -163,6 +173,8 @@ public class SecondaryController{
         if (manga.getEditorial() != null) {
             ComboBoxEditorial.setValue(manga.getEditorial());
         }
+        
+        // FORMATO DE LA LISTA DESPLEGABLE
         ComboBoxEditorial.setCellFactory((ListView<Editorial> l) -> new ListCell<Editorial>() {
             @Override
             protected void updateItem(Editorial editorial, boolean empty) {
@@ -174,7 +186,7 @@ public class SecondaryController{
                 }
             }
         });
-        
+        // FORMATO PARA EL VALOR MOSTRADO ACTUALMENTE COMO SELECCIONADO
         ComboBoxEditorial.setConverter(new StringConverter<Editorial>(){
             @Override
             public String toString(Editorial editorial) {
@@ -190,6 +202,7 @@ public class SecondaryController{
             }
         });
         
+        // CARGA LA FOTO EN EL IMAGEVIEW
         if (manga.getLogo() != null) {
             String imageFileName = manga.getLogo();
             File file = new File(CARPETA_FOTOS + "/" + imageFileName);
@@ -207,12 +220,15 @@ public class SecondaryController{
         int numFilaSeleccionada;
         boolean errorFormato = false;
         
+        // ALMACENA EL CONTENIDO DE LOS TEXTFIELDS (STRINGS)
         manga.setNombre(textFieldNombreSecondary.getText());
         manga.setAutor(textFieldAutorSecondary.getText());
         manga.setIsbn(textFieldISBMSecondary.getText());
         manga.setEmailEditorial(textFieldEmailEditorialSecondary.getText());
         manga.setIdioma(textFieldIdiomaSecondary.getText());
         
+        // ALMACENA EL CONTENIDO DE LOS TEXTFIELDS (SHORT)
+        // HAY QUE CONVERTIR ESTOS DATOS STRINGS A SHORT PARA PODER ALMACENARLOS
         if (!textFieldVolumenSecondary.getText().isEmpty()){
             try{
                 manga.setVolumen(Short.valueOf(textFieldVolumenSecondary.getText()));
@@ -243,6 +259,8 @@ public class SecondaryController{
                 textFieldNumPaginasSecondary.requestFocus();
             }
         }
+        
+        // EN ESTE CASO EN DECIMAL
         if (!textFieldPrecioSecondary.getText().isEmpty()){
             try{
                 manga.setPrecio(BigDecimal.valueOf(Double.valueOf(textFieldPrecioSecondary.getText()).doubleValue()));
@@ -254,8 +272,10 @@ public class SecondaryController{
             }
         }
         
+        // ALMACENA EL VALOR DEL CHECKBOX (TRUE || FALSE)
         manga.setRestriccionEdad(CheckBox18.isSelected());
         
+        // COMPRUEBA CUÁL DE LOS RADIOBUTTONS ESTÁ SELECCIONADO
         if (RadioButtonPublicando.isSelected()){
             manga.setEstado(PUBLICANDO);
         } else if (RadioButtonPausado.isSelected()){
@@ -266,6 +286,7 @@ public class SecondaryController{
             manga.setEstado(FINALIZADO);
         }
         
+        // TOMA LA FECHA SELECCIONADA
         if (DatePickerPublicacion.getValue() != null) {
             LocalDate LocalDate = DatePickerPublicacion.getValue();
             ZonedDateTime zonedDateTime =  LocalDate.atStartOfDay(ZoneId.systemDefault());
@@ -276,21 +297,27 @@ public class SecondaryController{
             manga.setFechaPublicaion(null);
         }
         
+        // TOMA EL VALOR DE LA LISTA DESPLEGABLE DE LAS EDITORIALES
         manga.setEditorial(ComboBoxEditorial.getValue());
         
         if (!errorFormato) {
             try {
+                // SI NO TIENE ID GUARDA EL NUEVO MANGA
                 if (manga.getId() == null) {
                     System.out.println("Guardando nuevo manga en BD");
                     App.em.persist(manga);
-                } else {
+                } else { 
+                    // SI TIENE, ACTUALIZA LOS DATOS DEL MANGA
                     System.out.println("Actualizando manga en BD");
                     App.em.merge(manga);
                 }
+                // REALIZAMOS UNA TRANSACCIÓN
                 App.em.getTransaction().commit();
-                
+                // VUELVE A LA PRIMERA PANTALLA
                 App.setRoot("primary");
+                
             } catch (RollbackException ex) {
+                // CONTROLES DE ERRORES Y LO MOSTRAMOS CON UN ALERT
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setHeaderText("No se han podido guardar los cambios. " + 
                         "Compruebe que los datos cumplen los requisitos");
@@ -304,6 +331,7 @@ public class SecondaryController{
 
     @FXML
     private void onActtionButtonCancelar(ActionEvent event) {
+        // NO GUARDA LOS DATOS MODIFICADOS Y VUELVE A LA PRIMERA PANTALLA
         App.em.getTransaction().rollback();
         
         try {
@@ -315,11 +343,12 @@ public class SecondaryController{
 
     @FXML
     private void onActtionButtonExaminar(ActionEvent event) {
+        // CREA LA CARPETA DONDE SE GUARDARÁ LAS FOTOS
         File carpetaFotos = new File(CARPETA_FOTOS);
         if(!carpetaFotos.exists()){
             carpetaFotos.mkdir();
         }
-        
+        // VENTANA QUE APARECE PARA SELECCIONAR LA IMAGEN
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Sleccionar imagen");
         fileChooser.getExtensionFilters().addAll(
@@ -327,7 +356,10 @@ public class SecondaryController{
                 new FileChooser.ExtensionFilter("Todos los archivos", "*.*")
         );
         
+        // NOS APARECE LA VENTANA EMERGENTE DONDE ESTÉ LA VENTANA PRINCIPAL
         File file = fileChooser.showOpenDialog(rootSecondary.getScene().getWindow());
+        
+        // SI SELECCIONAMOS ALGO COPIA EL FICHERO A LA CARPETA FOTOS
         if (file != null){
             try {
                 Files.copy(file.toPath(), new File (CARPETA_FOTOS + "/" + file.getName()).toPath());
@@ -346,28 +378,34 @@ public class SecondaryController{
 
     @FXML
     private void onActtionButtonSuprimir(ActionEvent event) {
+        // ALERT PARA INFORMAR QUE SE ELIMINARÁ LA IMAGEN
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Confirmar supresión de imagen");
         alert.setHeaderText("¿Desea SUPRIMIR el archivo asociado a al imagen, \n" 
             + "quitar la foto pero MANTENER el archivo, \no CANCELAR la operación");
         alert.setContentText("Elija la opción deseada:");
         
+        // BOTONES PARA CONFIRMAR, CANCELAR O MANTENER
         ButtonType buttonTypeEliminar = new ButtonType("Suprimir");
         ButtonType buttonTypeMantener = new ButtonType("Mantener");
         ButtonType buttonTypeCancel = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
         
         alert.getButtonTypes().setAll(buttonTypeEliminar, buttonTypeMantener, buttonTypeCancel);
-
+        
         Optional<ButtonType> result = alert.showAndWait();
         if (result.get() == buttonTypeEliminar){
+            // SI PULSA SOBRE ELIMINAR, OBTENEMOS EL NOMBRE DE LA FOTO Y BUSCA EL NOMBRE 
+            // EN LA CARPET Y SI EXISTE LO BORRA
             String imageFileName = manga.getLogo();
             File file = new File(CARPETA_FOTOS + "/" + imageFileName);
             if (file.exists()){
                 file.delete();
             }
+            // ACTUALIZAMOS EL OBJETO DE MANGA Y LO QUITAMOS DEL IMAGEVIEW
             manga.setLogo(null);
             imageViewLogo.setImage(null);
         } else if (result.get() == buttonTypeMantener) {
+            // QUITA LA IMAGEN DEL IMAGEVIEW Y DEL OBJETO PERO NO SE BORRA DE LA CARPETA
             manga.setLogo(null);
             imageViewLogo.setImage(null);
         }

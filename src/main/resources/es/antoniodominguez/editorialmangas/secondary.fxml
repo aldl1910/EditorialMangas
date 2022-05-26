@@ -82,7 +82,7 @@
                   <Blend />
                </effect>
             </Label>
-            <Label text="Precio:" GridPane.rowIndex="9">
+            <Label text="Precio (€):" GridPane.rowIndex="9">
                <effect>
                   <Blend />
                </effect></Label>
